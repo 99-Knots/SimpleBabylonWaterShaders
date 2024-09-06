@@ -37,8 +37,14 @@ window.addEventListener('DOMContentLoaded', function () {
         waterMaterial.setVector3("cameraPos", camera.position);
         
 
-        const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 1000, height: 1000, subdivisions: 1000}, scene);
+        const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100, subdivisions: 1000}, scene);
         waterSurface.material = waterMaterial;
+
+        let time = 0;
+        scene.registerBeforeRender(function () {
+            time += 0.1;
+            waterMaterial.setFloat('time', time);
+        });
 
         return scene;
     };
