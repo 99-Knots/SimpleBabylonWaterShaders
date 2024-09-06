@@ -5,19 +5,20 @@ window.addEventListener('DOMContentLoaded', function () {
     var createScene = function () {
         var scene = new BABYLON.Scene(engine);
 
-        var camera = new BABYLON.ArcRotateCamera("Camera", 0, Math.PI / 2, 10, BABYLON.Vector3.Zero(), scene);
-        camera.maxZ = 100;
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 1.3, 100, new BABYLON.Vector3(0, 1, 0), scene);
+        //camera.maxZ = 100;
         camera.attachControl(canvas, true);
         const depthRenderer = scene.enableDepthRenderer();
 
-        // object based renderpass
-        const shaderMaterial = new BABYLON.ShaderMaterial("shader", scene, "./shaders/default", {
-            attributes: ["position", "uv", "normal"], // Vertex shader inputs
-            uniforms: ["worldViewProjection", "textureSampler", "lightPos"], // Fragment shader uniforms
-        });
-        shaderMaterial.setVector3("lightPos", new BABYLON.Vector3(20, 20, 0));
-        shaderMaterial.setFloat("scaling", 1);
-        shaderMaterial.setTexture("textureSampler", new BABYLON.Texture("./textures/tile.png", scene));
+        const sunPosition = new BABYLON.Vector3(-500, 100, 0);
+
+        const skyMaterial = new BABYLON.SkyMaterial('skyMat', scene);
+        skyMaterial.backFaceCulling = false;
+        skyMaterial.useSunPosition = true;
+        skyMaterial.sunPosition = sunPosition;
+
+        const skybox = BABYLON.MeshBuilder.CreateBox('skyBox', { size: 1000.0 }, scene);
+        skybox.material = skyMaterial;
 
         // full-screen render pass
         // demo for broken texture in PostProcess: https://playground.babylonjs.com/#AUOKD6
@@ -26,14 +27,18 @@ window.addEventListener('DOMContentLoaded', function () {
             effect.setTexture("depthSampler", depthRenderer.getDepthMap());
         };
 
+        // water shader
+        const waterMaterial = new BABYLON.ShaderMaterial("shader", scene, "./shaders/water", {
+            attributes: ["position", "uv", "normal"], // Vertex shader inputs
+            uniforms: ["worldViewProjection", "lightPos", "cameraPos", "time"], // Fragment shader uniforms
+        });
+        waterMaterial.backFaceCulling = false;
+        waterMaterial.setVector3("lightPos", sunPosition);
+        waterMaterial.setVector3("cameraPos", camera.position);
+        
 
-        //document.getElementById("scale-slider").addEventListener("input", (e) => {shaderMaterial.setFloat("scaling", e.target.value); console.log("scale", e.target.value)});
-
-        // objects in scene
-        const torus = BABYLON.CreateTorusKnot("sphere", {radius: 1.5, radialSegments: 128});
-        torus.material = shaderMaterial;
-        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
-        sphere.material = shaderMaterial;
+        const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 1000, height: 1000, subdivisions: 1000}, scene);
+        waterSurface.material = waterMaterial;
 
         return scene;
     };
