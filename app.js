@@ -30,12 +30,12 @@ window.addEventListener('DOMContentLoaded', function () {
         // water shader
         const waterMaterial = new BABYLON.ShaderMaterial("shader", scene, "./shaders/water", {
             attributes: ["position", "uv", "normal"], // Vertex shader inputs
-            uniforms: ["worldViewProjection", "lightPos", "cameraPos", "time"], // Fragment shader uniforms
+            uniforms: ["worldViewProjection", "lightPos", "cameraPos", "time", "noise"], // Fragment shader uniforms
         });
         waterMaterial.backFaceCulling = false;
         waterMaterial.setVector3("lightPos", sunPosition);
         waterMaterial.setVector3("cameraPos", camera.position);
-        
+        waterMaterial.setTexture("noise", new BABYLON.Texture("./textures/noise_rgba_32x32.png", scene));
 
         const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100, subdivisions: 1000}, scene);
         waterSurface.material = waterMaterial;
