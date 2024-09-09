@@ -4,6 +4,7 @@ precision highp float;
 // Attributes
 attribute vec3 position;
 attribute vec3 normal;
+attribute vec2 uv;
 
 // Uniforms
 uniform mat4 worldViewProjection;
@@ -18,30 +19,33 @@ varying vec3 vNormal;
 varying vec3 lightDir;
 varying vec3 camDir;
 
-int numberOfWaves = 8;
+int numberOfWaves = 16;
 
 
 void main(void) {
-    float l = 10.0;      // wavelength
+    float l = 10.0;     // wavelength
     float f = 2./l;     // frequency
-    float a = 0.6;       // amplitude
-    float s = 2.;       // speed
+    float a = 0.7;      // amplitude
+    float s = 1.;       // speed
     float phi = s * f;  // phase constant of speed
-    vec2 d = vec2(1., 1.);  //wave direction
     float y_offset = 0.0;
+    float k = 5.;
+
 
     vec3 bitangent = vec3(1., 0., 0.);
     vec3 tangent = vec3(0., 0., 1.);
     for(int i=0; i<numberOfWaves; i++) {
-        vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.7));
+        vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.9));    // very interesting effect if uv.y as second texture coord parameter
         vec2 dir = normalize(rand.rg*2. - 1.);
         float inner = dot(dir, position.xz) * f + time * phi;
-        y_offset += a * sin(inner);
+        y_offset += 2. * a * pow((sin(inner)+1.)/2., k);
 
-        bitangent.y += f * dir.x * a * cos(inner);
-        tangent.y += f * dir.y * a * cos(inner);
-        a *= 0.8;
-        f *= 1.1;
+        float deriv = f * a * cos(inner) * k * pow((sin(inner)+1.)/2., k-1.);
+        bitangent.y += dir.x * deriv;
+        tangent.y += dir.y * deriv;
+
+        a *= 0.72;
+        f *= 1.15;
         phi = s * f;
     }
 
