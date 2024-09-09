@@ -19,7 +19,8 @@ varying vec3 vNormal;
 varying vec3 lightDir;
 varying vec3 camDir;
 
-int numberOfWaves = 16;
+int numberOfWaves = 8;
+bool circularWaves = true;
 
 
 void main(void) {
@@ -29,15 +30,24 @@ void main(void) {
     float s = 1.;       // speed
     float phi = s * f;  // phase constant of speed
     float y_offset = 0.0;
-    float k = 5.;
+    float k = 3.;
 
 
     vec3 bitangent = vec3(1., 0., 0.);
     vec3 tangent = vec3(0., 0., 1.);
     for(int i=0; i<numberOfWaves; i++) {
         vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.9));    // very interesting effect if uv.y as second texture coord parameter
-        vec2 dir = normalize(rand.rg*2. - 1.);
-        float inner = dot(dir, position.xz) * f + time * phi;
+        vec2 dir;
+        float inner;
+        if (circularWaves) {
+            vec2 diff = position.xz - vec2(rand.rg*100. - 50.); // adjust to fit on plane
+            dir = -normalize(diff);
+            inner = dot(dir, diff) * f + time *phi;     // map to wave centric system
+        }
+        else {
+            dir = normalize(rand.rg*2. - 1.);
+            inner = dot(dir, position.xz) * f + time * phi;
+        }
         y_offset += 2. * a * pow((sin(inner)+1.)/2., k);
 
         float deriv = f * a * cos(inner) * k * pow((sin(inner)+1.)/2., k-1.);
