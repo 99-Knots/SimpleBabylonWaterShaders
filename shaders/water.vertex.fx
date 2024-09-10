@@ -19,11 +19,16 @@ varying vec3 vNormal;
 varying vec3 lightDir;
 varying vec3 camDir;
 
-int numberOfWaves = 8;
-bool circularWaves = true;
+int numberOfWaves = 16;
+bool circularWaves = false;
+float Q = 0.9;
 
+struct Wave {
+    vec3 position;
+    vec3 normal;
+};
 
-void main(void) {
+Wave sumOfSines() {
     float l = 10.0;     // wavelength
     float f = 2./l;     // frequency
     float a = 0.7;      // amplitude
@@ -58,12 +63,63 @@ void main(void) {
         f *= 1.15;
         phi = s * f;
     }
+    Wave wave;
+    wave.position = vec3(position.x, position.y + y_offset, position.z);
+    wave.normal = normalize(cross(bitangent, tangent));
+    return wave;
+}
+
+Wave GerstnerWaves() {
+    float l = 10.0;     // wavelength
+    float f = 2./l;     // frequency
+    float a = 1.;      // amplitude
+    float s = 1.;       // speed
+    float phi = s * f;  // phase constant of speed
+    float k = 3.;
+
+    float x_offset = 0.;
+    float y_offset = 0.;
+    float z_offset = 0.;
+
+    vec3 normal = vec3(0., 1., 0.);
+
+    for (int i=0; i<numberOfWaves; i++) {
+        float Qi = Q/(f*a*float(numberOfWaves));
+        vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.9));
+        vec2 dir = normalize(rand.rg*2. - 1.);
+        float inner = f * dot(dir, position.xz) + time * phi;
+        float sinInner = sin(inner);
+        float cosInner = cos(inner);
+        
+        x_offset += Qi * a * dir.x * cosInner;
+        y_offset += a * sinInner;
+        z_offset += Qi * a * dir.y * cosInner;
+
+        normal.x -= dir.x * f * a * cosInner;
+        normal.z -= dir.y * f * a * cosInner;
+        normal.y -= Qi * f * a * sinInner;
+        
+        a *= 0.72;
+        f *= 1.13;
+        phi = s * f;
+    }
+
+    Wave wave;
+    wave.position = vec3(position.x + x_offset, y_offset, position.z + z_offset);
+    wave.normal = -normal;  // why negative?
+    return wave;
+}
 
 
-    vec3 pos = vec3(position.x, position.y + y_offset, position.z);
+void main(void) {
+    
+    //Wave wave = sumOfSines();
+    Wave wave = GerstnerWaves();
+
+    vec3 pos = wave.position;
     lightDir = normalize(pos - lightPos);
     camDir = normalize(pos - camPos);
     vPosition = position;
-    vNormal = normalize(cross(bitangent, tangent));
+    vNormal = wave.normal;
     gl_Position = worldViewProjection * vec4(pos, 1.0);
 }
