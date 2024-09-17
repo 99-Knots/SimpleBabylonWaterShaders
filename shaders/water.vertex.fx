@@ -19,7 +19,7 @@ varying vec3 vNormal;
 varying vec3 lightDir;
 varying vec3 camDir;
 
-int numberOfWaves = 16;
+int numberOfWaves = 8;
 bool circularWaves = false;
 float Q = 0.9;
 
@@ -70,8 +70,10 @@ Wave sumOfSines() {
 }
 
 Wave GerstnerWaves() {
+    float medianWavelength = 7.;
     float l = 10.0;     // wavelength
-    float f = 2./l;     // frequency
+    //float f = 2./l;     // frequency
+    float f = sqrt(0.0981*6.283185/l);
     float a = 1.;      // amplitude
     float s = 1.;       // speed
     float phi = s * f;  // phase constant of speed
@@ -86,6 +88,9 @@ Wave GerstnerWaves() {
     for (int i=0; i<numberOfWaves; i++) {
         float Qi = Q/(f*a*float(numberOfWaves));
         vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.9));
+        l = medianWavelength * (rand.b * 1.5 + 0.5);
+        f = sqrt(0.0981*6.283185/l);
+        a = 0.05*l;
         vec2 dir = normalize(rand.rg*2. - 1.);
         float inner = f * dot(dir, position.xz) + time * phi;
         float sinInner = sin(inner);
@@ -99,8 +104,8 @@ Wave GerstnerWaves() {
         normal.z -= dir.y * f * a * cosInner;
         normal.y -= Qi * f * a * sinInner;
         
-        a *= 0.72;
-        f *= 1.13;
+        //a *= 0.72;
+        //f *= 1.13;
         phi = s * f;
     }
 
