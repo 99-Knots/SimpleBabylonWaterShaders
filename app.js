@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded', function () {
     var createScene = function () {
         var scene = new BABYLON.Scene(engine);
 
-        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 1.3, 100, new BABYLON.Vector3(0, 1, 0), scene);
+        var camera = new BABYLON.ArcRotateCamera("Camera", 0, 1.3, 100, new BABYLON.Vector3(50, 1, 0), scene);
         //camera.maxZ = 100;
         camera.attachControl(canvas, true);
         const depthRenderer = scene.enableDepthRenderer();
@@ -30,21 +30,32 @@ window.addEventListener('DOMContentLoaded', function () {
         // water shader
         const waterMaterial = new BABYLON.ShaderMaterial("shader", scene, "./shaders/water", {
             attributes: ["position", "uv", "normal"], // Vertex shader inputs
-            uniforms: ["worldViewProjection", "lightPos", "cameraPos", "time", "noise"], // Fragment shader uniforms
+            uniforms: ["worldViewProjection", "lightPos", "camPos", "time", "noise", "useGerstner"], // Fragment shader uniforms
         });
         waterMaterial.backFaceCulling = false;
         waterMaterial.setVector3("lightPos", sunPosition);
-        waterMaterial.setVector3("cameraPos", camera.position);
+        waterMaterial.setVector3("camPos", camera.position);
         waterMaterial.setTexture("noise", new BABYLON.Texture("./textures/noise_rgba_32x32.png", scene));
 
-        const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100, subdivisions: 1000}, scene);
+
+        const waterSurface = BABYLON.MeshBuilder.CreateGround("ground", {width: 300, height: 300, subdivisions: 1000}, scene);
         waterSurface.material = waterMaterial;
+
+        const toggle = document.getElementById("modeToggle"); 
+        let useGerstner = toggle.checked;
+        waterMaterial.setInt("useGerstner", useGerstner);
+
+        toggle.addEventListener("change", () => { 
+            useGerstner = toggle.checked ? 1 : 0;
+            waterMaterial.setInt("useGerstner", useGerstner);
+        });
 
         let time = 0;
         scene.registerBeforeRender(function () {
             time += 0.1;
-            waterMaterial.setFloat('time', time);
+            waterMaterial.setFloat('time', time);        
         });
+        
 
         return scene;
     };

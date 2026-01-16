@@ -8,25 +8,20 @@
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-    <style>
-        /* Fullscreen canvas */
-        html, body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #renderCanvas {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            touch-action: none; /* Disable touch gestures on canvas */
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <canvas id="renderCanvas"></canvas>
+    <div class="toggleContainer">
+        <label class="switch">
+            <input type="checkbox" id="modeToggle" checked>
+            <span class="slider">
+                <span class="slider-label">sine</span>
+                <span class="slider-label">gerstner</span>
+            </span>
+        </label>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

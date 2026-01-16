@@ -12,6 +12,7 @@ uniform vec3 lightPos;
 uniform vec3 camPos;
 uniform float time;
 uniform sampler2D noise;
+uniform int useGerstner;
 
 // Varying
 varying vec3 vPosition;
@@ -119,7 +120,7 @@ Wave Gerstner(vec3 vertexPos) {
     float l = 15.;
     float w;
     float a;
-    float speed = 1.0;
+    float speed = 1.5;
     float phi;
     float medianWavelength = 15.;
 
@@ -162,9 +163,12 @@ Wave Gerstner(vec3 vertexPos) {
 void main(void) {
     
     Wave wave;
-    //wave = sumOfSines();
-    //wave = GerstnerWaves();
-    wave = Gerstner(position.xyz);
+    if(useGerstner == 1) {
+        wave = Gerstner(position.xyz);
+    }
+    else {
+        wave = sumOfSines();
+    }
 
     vec3 pos = wave.position;
     lightDir = normalize(lightPos - pos);
