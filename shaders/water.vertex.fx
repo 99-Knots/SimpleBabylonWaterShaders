@@ -20,9 +20,9 @@ varying vec3 vNormal;
 varying vec3 lightDir;
 varying vec3 camDir;
 
-int numberOfWaves = 32;
+const int numberOfWaves = 32;
 bool circularWaves = false;
-float Q = 0.9;
+float Q = 3.;
 
 struct Wave {
     vec3 position;
@@ -30,10 +30,10 @@ struct Wave {
 };
 
 Wave sumOfSines() {
-    float l = 10.0;     // wavelength
+    float l = 50.0;     // wavelength
     float f = 2./l;     // frequency
-    float a = 0.7;      // amplitude
-    float s = 1.;       // speed
+    float a = 3.;      // amplitude
+    float s = 3.;       // speed
     float phi = s * f;  // phase constant of speed
     float y_offset = 0.0;
     float k = 3.;
@@ -60,7 +60,7 @@ Wave sumOfSines() {
         bitangent.y += dir.x * deriv;
         tangent.y += dir.y * deriv;
 
-        a *= 0.72;
+        a *= 0.79;
         f *= 1.15;
         phi = s * f;
     }
@@ -71,58 +71,56 @@ Wave sumOfSines() {
 }
 
 Wave GerstnerWaves() {
-    float medianWavelength = 7.;
-    float l = 10.0;     // wavelength
-    //float f = 2./l;     // frequency
-    float f = sqrt(0.0981*6.283185/l);
-    float a = 1.;      // amplitude
-    float s = 1.;       // speed
-    float phi = s * f;  // phase constant of speed
-    float k = 3.;
+    float l = 150.0;     // wavelength
+    float s = 4.5;      // speed
+    float a;            // amplitude
+    float phi;          // phase constant of speed
+    float w;
+    float k;
 
-    float x_offset = 0.;
-    float y_offset = 0.;
-    float z_offset = 0.;
-
+    vec3 offset = vec3(0.);
     vec3 normal = vec3(0., 1., 0.);
 
     for (int i=0; i<numberOfWaves; i++) {
-        float Qi = Q/(f*a*float(numberOfWaves));
         vec4 rand = texture2D(noise, vec2(float(i)/float(numberOfWaves), 0.9));
-        l = medianWavelength * (rand.b * 1.5 + 0.5);
-        f = sqrt(0.0981*6.283185/l);
-        a = 0.05*l;
+        l *= 0.84;
+
+        k = 6.283185/l;
+        a = 0.018 * l;
+        w = sqrt(0.0981 * k);
+        phi = s * w;
         vec2 dir = normalize(rand.rg*2. - 1.);
-        float inner = f * dot(dir, position.xz) + time * phi;
+
+        float inner = k * dot(dir, position.xz) + time * phi;
         float sinInner = sin(inner);
         float cosInner = cos(inner);
         
-        x_offset += Qi * a * dir.x * cosInner;
-        y_offset += a * sinInner;
-        z_offset += Qi * a * dir.y * cosInner;
+        float Qi = Q/(k*a*float(numberOfWaves));
+        offset.x += Qi * a * dir.x * cosInner;
+        offset.y += a * sinInner;
+        offset.z += Qi * a * dir.y * cosInner;
 
-        normal.x -= dir.x * f * a * cosInner;
-        normal.z -= dir.y * f * a * cosInner;
-        normal.y -= Qi * f * a * sinInner;
+        normal.x -= dir.x * w * a * cosInner;
+        normal.z -= dir.y * w * a * cosInner;
+        normal.y -= Qi * w * a * sinInner;
         
-        //a *= 0.72;
-        //f *= 1.13;
-        phi = s * f;
     }
 
     Wave wave;
-    wave.position = vec3(position.x + x_offset, y_offset, position.z + z_offset);
-    wave.normal = -normal;  // why negative?
+    wave.position = position.xyz + offset;
+    wave.normal = normalize(normal);
+    
     return wave;
 }
 
-Wave Gerstner(vec3 vertexPos) {
-    float l = 15.;
+Wave Gerstner() {
+    float l = 50.;
     float w;
     float a;
     float speed = 1.5;
     float phi;
     float medianWavelength = 15.;
+    float k = 6.283185 / l;
 
 
     vec3 offset = vec3(0.);
@@ -134,13 +132,14 @@ Wave Gerstner(vec3 vertexPos) {
         //l = medianWavelength * pow(1.3, -float(i));
         //l = mix(0.05, 8.0, rand.g);
         l *= 0.84;
+        k = 6.283185 / l;
         w = sqrt(0.0981 * 6.283185/l);
-        a = 0.05 * l;
+        a = 0.015 * l;
         phi = speed * w;
         float Qi = Q / (w*a*float(numberOfWaves));
         float angle = rand.r * 6.283185;
         vec2 dir = vec2(cos(angle), sin(angle));
-        float inner = w * dot(dir, position.xz) + time * phi;
+        float inner = k * dot(dir, position.xz) + time * phi;
         float sinInner = sin(inner);
         float cosInner = cos(inner);
         offset.x += Qi * a * dir.x * cosInner;
@@ -153,8 +152,8 @@ Wave Gerstner(vec3 vertexPos) {
     }
 
     Wave wave;
-    wave.position = vertexPos.xyz + offset;
-    wave.normal = vec3(0., 1.0, 0.) - normal;
+    wave.position = position.xyz + offset;
+    wave.normal = normalize(vec3(0., 1.0, 0.) - normal);
     return wave;
 
 }
@@ -164,7 +163,7 @@ void main(void) {
     
     Wave wave;
     if(useGerstner == 1) {
-        wave = Gerstner(position.xyz);
+        wave = GerstnerWaves();
     }
     else {
         wave = sumOfSines();
@@ -173,7 +172,7 @@ void main(void) {
     vec3 pos = wave.position;
     lightDir = normalize(lightPos - pos);
     camDir = normalize(camPos - pos);
-    vPosition = position;
+    vPosition = wave.position;
     vNormal = wave.normal;
     gl_Position = worldViewProjection * vec4(pos, 1.0);
 }

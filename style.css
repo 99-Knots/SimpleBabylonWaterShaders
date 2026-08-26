@@ -17,7 +17,10 @@ html, body {
     position: absolute; 
     top: 10px; 
     left: 10px; 
+    right: 10px;
     z-index: 10;
+    display: flex;
+    justify-content: space-between;
 }
 
 .switch { 
@@ -25,32 +28,50 @@ html, body {
     display: inline-block;
 } 
 
-#modeToggle { 
+.button {
+    position: relative;
+    cursor: pointer; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+    background-color: #1954a7;
+    transition: 0.3s; 
+    border-radius: 0.5rem;
+    padding: 0.3rem;
+}
+
+#modeToggle, #pauseBtn { 
     display: none;
     width: 0; 
     height: 0; 
 } 
 
-.slider { 
-    position: absolute; 
-    cursor: pointer; 
-    display: flex;
+.play-pause {
+    height: 1rem;
+    aspect-ratio: 1;
+}
+
+.play-pause::before {
+    content: "⏸";
+}
+
+.play-pause:has(#pauseBtn:checked)::before {
+    content: "▶";
+}
+
+.slider {
     width: 9rem;
-    background-color: #1954a7;
-    transition: 0.3s; 
-    border-radius: 0.5rem;
 }
 
 .slider-label {
     z-index: 20;
-    color: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
     flex: 1;
-    padding: 0.3rem;
     text-align: center;
 }
 
-.slider:before { 
+.slider::before { 
     position: absolute; 
     content: ""; 
     height: 100%; 
@@ -58,8 +79,10 @@ html, body {
     background-color: #1496d2; 
     transition: 0.3s; 
     border-radius: 0.5rem;
+    top: 0%;
+    left: 0%;
 } 
 
-input:checked + .slider:before { 
+#modeToggle:checked + .slider::before { 
     transform: translateX(100%); 
 }

@@ -13,6 +13,7 @@ window.addEventListener('DOMContentLoaded', function () {
         const sunPosition = new BABYLON.Vector3(-500, 100, 0);
 
         const skyMaterial = new BABYLON.SkyMaterial('skyMat', scene);
+
         skyMaterial.backFaceCulling = false;
         skyMaterial.useSunPosition = true;
         skyMaterial.sunPosition = sunPosition;
@@ -22,6 +23,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
         // full-screen render pass
         // demo for broken texture in PostProcess: https://playground.babylonjs.com/#AUOKD6
+        // not an error of babylon but a parameter missmatch, in playground samplers and parameters are swapped
         var postProcess = new BABYLON.PostProcess("post1", "./shaders/defaultPost", [], ["depthSampler"], 1.0, camera);
         postProcess.onApply = function (effect) {
             effect.setTexture("depthSampler", depthRenderer.getDepthMap());
@@ -30,7 +32,8 @@ window.addEventListener('DOMContentLoaded', function () {
         // water shader
         const waterMaterial = new BABYLON.ShaderMaterial("shader", scene, "./shaders/water", {
             attributes: ["position", "uv", "normal"], // Vertex shader inputs
-            uniforms: ["worldViewProjection", "lightPos", "camPos", "time", "noise", "useGerstner"], // Fragment shader uniforms
+            uniforms: ["worldViewProjection", "lightPos", "camPos", "time", "useGerstner"], // Fragment shader uniforms
+            samplers: ["noise"]
         });
         waterMaterial.backFaceCulling = false;
         waterMaterial.setVector3("lightPos", sunPosition);
@@ -50,10 +53,18 @@ window.addEventListener('DOMContentLoaded', function () {
             waterMaterial.setInt("useGerstner", useGerstner);
         });
 
+        const pauseBtn = document.getElementById("pauseBtn");
+        let pause = false;
+        pauseBtn.addEventListener("change", () => {
+            pause = !pause;
+        });
+
         let time = 0;
         scene.registerBeforeRender(function () {
-            time += 0.1;
-            waterMaterial.setFloat('time', time);        
+            if(!pause)
+                time += 0.1;
+            waterMaterial.setFloat('time', time);
+            waterMaterial.setVector3('camPos', camera.position);
         });
         
 
